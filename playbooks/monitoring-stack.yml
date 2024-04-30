@@ -1,0 +1,71 @@
+---
+- name: "MORPHEUS | Déploiment monitoring-stack"
+  hosts: "morpheus"
+  become: true
+  vars_files:
+    - "../group_vars/morpheus-monitoring.yml"
+  tasks:
+    - name: "MORPHEUS - PROXMOX POST-INSTALL | Prérequis logiciel/librairies"
+      apt:
+        name:
+         - "python3-pip"
+         - "python3-proxmoxer"
+        state: "present"
+
+    - name: "MORPHEUS - PROXMOX POST-INSTALL | Récupération des informations sur le noeud"
+      community.general.proxmox_user_info:
+        api_host: "192.168.10.5"
+        api_user: "{{ pve_api_user }}"
+        api_password: "{{ pve_api_password }}"
+      register: proxmox_infos
+
+    - name: "MORPHEUS - PROXMOX POST-INSTALL | Informations sur le noeud"
+      ansible.builtin.debug:
+        var: proxmox_infos
+
+    - name: "MORPHEUS - PROXMOX | CRÉATION CONTAINER LXC | morpheus-monitoring"
+      community.general.proxmox:
+        vmid: "{{ ct_id }}"
+        node: "{{ pve_node_name }}"
+        api_host: "{{ pve_api_host }}"
+        api_user: "{{ pve_api_user }}"
+        api_password: "{{ pve_api_password }}"
+        hostname: "{{ ct_hostname }}"
+        password: "{{ ct_password }}"
+        ostemplate: "{{ pve_storage_iso_name }}:vztmpl/{{ ct_iso_template }}"
+        cores: "{{ ct_cores }}"
+        swap: "{{ ct_swap }}"
+        memory: "{{ ct_memory }}"
+        disk: "{{ ct_disk }}"
+        storage: "{{ ct_storage }}"
+        netif: '{"net0":"name=eth0,ip={{ ct_network_ip }},gw={{ ct_network_gateway }},bridge={{ ct_network_bridge }}"}'
+        searchdomain: "{{ ct_searchdomain }}"
+        nameserver: "{{ ct_nameserver }}"
+        unprivileged: "{{ ct_unprivileged }}"
+        features:
+          - "{{ ct_feature_keyctl }}"
+          - "{{ ct_feature_nesting }}"
+          - "{{ ct_feature_fuse }}"
+        onboot: true
+        startup:
+          - "order=4"
+        tags:
+          - "debian"
+          - "docker"
+          - "prod"
+        state: "present"
+
+    - name: "MORPHEUS - PROXMOX | CONTAINER LXC | morpheus-monitoring Configuration"
+      ansible.builtin.command: pct set {{ ct_id }} -mp0 /opt/docker,mp=/opt/docker
+
+        
+    # - name: "MORPHEUS - PROXMOX | DÉMARRAGE CONTAINER LXC | morpheus-monitoring"
+    #   community.general.proxmox:
+    #     vmid: "{{ ct_id }}"
+    #     node: "morpheus"
+    #     api_host: "192.168.10.5"
+    #     api_user: "{{ pve_api_user }}"
+    #     api_password: "{{ pve_api_password }}"
+    #     state: "started"
+    #     timeout: 90
+        

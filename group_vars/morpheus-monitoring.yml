@@ -1,0 +1,32 @@
+---
+# Variable for morpheus-monitoring-stack
+# ANSIBLE
+ansible_python_interpreter: /usr/bin/python3
+
+# PROXMOX
+pve_node_name: "morpheus"
+pve_api_host: "192.168.10.5"
+pve_api_user: "root@pam"
+pve_api_password: "#Rh8ycle_0684%"
+pve_storage_iso_name: "iso"
+
+
+# LXC CONTAINER
+ct_iso_template : "debian-12-standard_12.2-1_amd64.tar.zst"
+ct_id        : 700
+ct_hostname  : "monitoring"
+ct_password  : "{{ ct_morpheus_monitoring_password }}"
+ct_searchdomain: allfabox.local
+ct_nameserver: 1.1.1.1
+ct_cores     : 2
+ct_memory    : 512
+ct_swap      : 512
+ct_disk      : 4
+ct_storage   : "local-zfs"
+ct_network_ip        : "192.168.10.70/24"
+ct_network_gateway   : "192.168.10.1"
+ct_network_bridge    : "vmbr0"
+ct_unprivileged      : true
+ct_feature_keyctl    : keyctl=1
+ct_feature_nesting   : nesting=1
+ct_feature_fuse      : fuse=1
